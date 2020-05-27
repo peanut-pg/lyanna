@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	registry "github.com/peanut-pg/lyanna"
+
 )
 
 func TestRegistry(t *testing.T) {

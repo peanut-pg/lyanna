@@ -7,7 +7,6 @@ import (
 	"path"
 	"time"
 
-	registry "github.com/peanut-pg/lyanna"
 
 	"go.etcd.io/etcd/clientv3"
 )

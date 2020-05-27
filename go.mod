@@ -2,12 +2,16 @@ module github.com/peanut-pg/lyanna
 
 go 1.14
 
+replace (
+    github.com/coreos/bbolt => go.etcd.io/bbolt v1.3.4
+	google.golang.org/grpc => google.golang.org/grpc v1.26.0
+)
+
 require (
 	github.com/coreos/bbolt v1.3.4 // indirect
 	github.com/coreos/etcd v3.3.22+incompatible // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
-	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
@@ -29,11 +33,8 @@ require (
 	golang.org/x/sys v0.0.0-20200523222454-059865788121 // indirect
 	golang.org/x/text v0.3.2 // indirect
 	golang.org/x/time v0.0.0-20200416051211-89c76fbcd5d1 // indirect
-	google.golang.org/grpc v1.29.1 // indirect
+	google.golang.org/genproto v0.0.0-20200527135933-430c10626276 // indirect
 	google.golang.org/protobuf v1.24.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
-
-replace github.com/coreos/bbolt => go.etcd.io/bbolt v1.3.4
-replace google.golang.org/grpc => google.golang.org/grpc v1.26.0
