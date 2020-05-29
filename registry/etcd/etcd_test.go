@@ -15,7 +15,7 @@ func TestRegistry(t *testing.T) {
 		"etcd",
 		registry.WithAddrs([]string{"192.168.31.182:2379"}),
 		registry.WithTimeout(time.Second),
-		registry.WithRegistryPath("syncd/lyanna/"),
+		registry.WithRegistryPath("/syncd/lyanna/"),
 		registry.WithHeartBeat(5),
 	)
 	if err != nil {

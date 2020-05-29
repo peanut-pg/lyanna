@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"path"
 	"time"
 
@@ -146,6 +147,7 @@ func (e *EtcdRegistry) registerService(registryService *RegisterService) (err er
 			continue
 		}
 		key := e.serviceNodePath(tmp)
+		log.Println("service key:", key)
 		_, err = e.client.Put(context.TODO(), key, string(data), clientv3.WithLease(resp.ID))
 		if err != nil {
 			continue
@@ -163,5 +165,5 @@ func (e *EtcdRegistry) registerService(registryService *RegisterService) (err er
 
 func (e *EtcdRegistry) serviceNodePath(service *registry.Service) string {
 	nodeIP := fmt.Sprintf("%s:%d", service.Nodes[0].IP, service.Nodes[0].Port)
-	return path.Join(e.options.RegistryPath, nodeIP, service.Name)
+	return path.Join(e.options.RegistryPath, service.Name, nodeIP)
 }
