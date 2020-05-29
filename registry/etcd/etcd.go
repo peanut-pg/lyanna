@@ -7,7 +7,7 @@ import (
 	"path"
 	"time"
 
-
+	"github.com/peanut-pg/lyanna/registry"
 	"go.etcd.io/etcd/clientv3"
 )
 
@@ -50,7 +50,7 @@ func (e EtcdRegistry) Name() string {
 	return "etcd"
 }
 
-func (e EtcdRegistry) Init(ctx context.Context, opts ...registry.Option) (err error) {
+func (e *EtcdRegistry) Init(ctx context.Context, opts ...registry.Option) (err error) {
 	e.options = &registry.Options{}
 	for _, opt := range opts {
 		opt(e.options)
@@ -65,22 +65,22 @@ func (e EtcdRegistry) Init(ctx context.Context, opts ...registry.Option) (err er
 	return err
 }
 
-func (e EtcdRegistry) Register(ctx context.Context, service *registry.Service) (err error) {
+func (e *EtcdRegistry) Register(ctx context.Context, service *registry.Service) (err error) {
 	select {
 	case e.serviceCh <- service:
 	default:
 		err = fmt.Errorf("register chan is full")
-		return err
+		return
 	}
-	return err
+	return
 }
 
-func (e EtcdRegistry) Unregister(ctx context.Context, service *registry.Service) (err error) {
-	panic("implement me")
+func (e *EtcdRegistry) Unregister(ctx context.Context, service *registry.Service) (err error) {
+	return nil
 }
 
 // 后台进行服务的注册
-func (e EtcdRegistry) Run() {
+func (e *EtcdRegistry) Run() {
 	for {
 		select {
 		case service := <-e.serviceCh:
