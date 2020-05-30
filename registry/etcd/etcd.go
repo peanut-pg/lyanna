@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	MaxServiceNum = 8
+	MaxServiceNum          = 8
+	MaxSyncServiceInterval = time.Second * 5 // 服务你同步时间间隔
 )
 
 var (
@@ -143,12 +144,19 @@ func (e *EtcdRegistry) GetService(ctx context.Context, name string) (service *re
 
 // 后台进行服务的注册
 func (e *EtcdRegistry) Run() {
+	ticker := time.NewTicker(MaxSyncServiceInterval)
 	for {
 		select {
+		case <-ticker.C:
+			e.syncServiceFromEtcd()
 		case service := <-e.serviceCh:
-			_, ok := e.registryServiceMap[service.Name]
+			registerService, ok := e.registryServiceMap[service.Name]
 			if ok {
 				// 已经注册过的服务不再重复注册
+				for _, node := range service.Nodes {
+					registerService.service.Nodes = append(registerService.service.Nodes, node)
+				}
+				registerService.registered = false
 				break
 			}
 			registryService := &RegisterService{
@@ -242,4 +250,40 @@ func (e *EtcdRegistry) getServiceFromCache(ctx context.Context, name string) (se
 	allServiceInfo := e.value.Load().(*AllServiceInfo)
 	service, ok = allServiceInfo.serviceMap[name]
 	return
+}
+
+func (e *EtcdRegistry) syncServiceFromEtcd() {
+	var allServiceInfoNew = &AllServiceInfo{
+		serviceMap: make(map[string]*registry.Service, MaxServiceNum),
+	}
+	ctx := context.TODO()
+	allServiceInfo := e.value.Load().(*AllServiceInfo)
+
+	for _, service := range allServiceInfo.serviceMap {
+		key := e.getServicePath(service.Name)
+		resp, err := e.client.Get(ctx, key, clientv3.WithPrefix())
+		if err != nil {
+			allServiceInfoNew.serviceMap[service.Name] = service
+			continue
+		}
+		serviceNew := &registry.Service{
+			Name: service.Name,
+		}
+
+		for _, kv := range resp.Kvs {
+			//fmt.Printf("index:%v key:%v val:%v\n", index, string(kv.Key), string(kv.Value))
+			value := kv.Value
+			var tmpService registry.Service
+			err = json.Unmarshal(value, &tmpService)
+			if err != nil {
+				return
+			}
+			for _, node := range tmpService.Nodes {
+				serviceNew.Nodes = append(serviceNew.Nodes, node)
+			}
+		}
+		allServiceInfoNew.serviceMap[serviceNew.Name] = serviceNew
+	}
+	e.value.Store(allServiceInfoNew)
+	log.Printf("background update all service success, len:%d\n", len(allServiceInfoNew.serviceMap))
 }

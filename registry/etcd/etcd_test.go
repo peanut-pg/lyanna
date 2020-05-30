@@ -39,6 +39,24 @@ func TestRegistry(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	go func() {
+		// 用于新注册的服务是否可以被发现
+		time.Sleep(time.Second * 10)
+		service.Nodes = append(service.Nodes,
+			&registry.Node{
+				IP:   "192.168.1.102",
+				Port: 8001,
+			},
+			&registry.Node{
+				IP:   "192.168.1.103",
+				Port: 8001,
+			},
+		)
+		err = registryInst.Register(context.TODO(), service)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 	for {
 		service, err := registryInst.GetService(context.TODO(), "agent_service")
 		if err != nil {
