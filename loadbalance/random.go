@@ -19,7 +19,28 @@ func (r *RandomeBalance) Select(ctx context.Context, nodes []*registry.Node) (no
 		err = ErrNotHaveNodes
 		return
 	}
-	index := rand.Intn(len(nodes))
-	node = nodes[index]
+
+	var totalWeight int
+	for _, val := range nodes {
+		if val.Weight == 0 {
+			val.Weight = DefaultNodeWeight
+		}
+		totalWeight += val.Weight
+	}
+	curWeight := rand.Intn(totalWeight)
+	curIndex := -1
+	for index, node := range nodes {
+		curWeight -= node.Weight
+		if curWeight < 0 {
+			curIndex = index
+			break
+		}
+	}
+	if curIndex == -1 {
+		err = ErrNotHaveNodes
+		return
+	}
+
+	node = nodes[curIndex]
 	return
 }

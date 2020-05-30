@@ -11,13 +11,17 @@ import (
 func TestRandomeBalance_Select(t *testing.T) {
 	balance := &RandomeBalance{}
 	var nodes []*registry.Node
-	for i := 100; i < 110; i++ {
+	var weights = []int{50, 100, 150}
+	for i := 0; i < 4; i++ {
 		node := &registry.Node{
-			IP:   fmt.Sprintf("192.168.1.%d", i),
-			Port: 8001,
+			IP:     fmt.Sprintf("192.168.1.%d", i),
+			Port:   8001,
+			Weight: weights[i%3],
 		}
+		fmt.Printf("node:%#v\n", node)
 		nodes = append(nodes, node)
 	}
+
 	countStat := make(map[string]int)
 	for i := 0; i < 1000; i++ {
 		node, err := balance.Select(context.TODO(), nodes)
