@@ -2,6 +2,7 @@ package etcd
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"testing"
 	"time"
@@ -39,7 +40,14 @@ func TestRegistry(t *testing.T) {
 		log.Fatal(err)
 	}
 	for {
-		time.Sleep(time.Second)
+		service, err := registryInst.GetService(context.TODO(), "agent_service")
+		if err != nil {
+			t.Fatalf("get service failed err:%v", err)
+		}
+		for _, node := range service.Nodes {
+			fmt.Printf("service:%s, node:%v\n", service.Name, node)
+		}
+		time.Sleep(time.Second * 2)
 	}
 
 }

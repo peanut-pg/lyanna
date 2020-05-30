@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"path"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/peanut-pg/lyanna/registry"
@@ -23,6 +25,10 @@ var (
 	}
 )
 
+type AllServiceInfo struct {
+	serviceMap map[string]*registry.Service
+}
+
 type RegisterService struct {
 	id          clientv3.LeaseID
 	service     *registry.Service
@@ -36,9 +42,15 @@ type EtcdRegistry struct {
 	serviceCh chan *registry.Service
 
 	registryServiceMap map[string]*RegisterService
+	value              atomic.Value // 用于实现缓存服务的原子操作
+	lock               sync.Mutex
 }
 
 func init() {
+	allServiceInfo := &AllServiceInfo{
+		serviceMap: make(map[string]*registry.Service, MaxServiceNum),
+	}
+	etcdRegistry.value.Store(allServiceInfo)
 	err := registry.RegisterPlugin(etcdRegistry)
 	if err != nil {
 		fmt.Printf("register plugin [%v] errror [%v]\n", etcdRegistry.Name(), err)
@@ -78,6 +90,55 @@ func (e *EtcdRegistry) Register(ctx context.Context, service *registry.Service) 
 
 func (e *EtcdRegistry) Unregister(ctx context.Context, service *registry.Service) (err error) {
 	return nil
+}
+
+func (e *EtcdRegistry) GetService(ctx context.Context, name string) (service *registry.Service, err error) {
+
+	// 先从缓存中获取
+	service, ok := e.getServiceFromCache(ctx, name)
+	if ok {
+		return
+	}
+	// 缓存没有 则从etcd中获取
+	e.lock.Lock()
+	defer e.lock.Unlock()
+	service, ok = e.getServiceFromCache(ctx, name)
+	if ok {
+		return
+	}
+	// 这里才会真正从etcd中获取
+	key := e.getServicePath(name)
+	resp, err := e.client.Get(ctx, key, clientv3.WithPrefix())
+	if err != nil {
+		return
+	}
+	service = &registry.Service{
+		Name: name,
+	}
+
+	for _, kv := range resp.Kvs {
+		//fmt.Printf("index:%v key:%v val:%v\n", index, string(kv.Key), string(kv.Value))
+		value := kv.Value
+		var tmpService registry.Service
+		err = json.Unmarshal(value, &tmpService)
+		if err != nil {
+			return
+		}
+		for _, node := range tmpService.Nodes {
+			service.Nodes = append(service.Nodes, node)
+		}
+
+	}
+	allServiceInfoOld := e.value.Load().(*AllServiceInfo)
+	var allServiceInfoNew = &AllServiceInfo{
+		serviceMap: make(map[string]*registry.Service, MaxServiceNum),
+	}
+	for key, val := range allServiceInfoOld.serviceMap {
+		allServiceInfoNew.serviceMap[key] = val
+	}
+	allServiceInfoNew.serviceMap[name] = service
+	e.value.Store(allServiceInfoNew)
+	return
 }
 
 // 后台进行服务的注册
@@ -122,8 +183,12 @@ func (e *EtcdRegistry) keepAlive(registryService *RegisterService) {
 			registryService.registered = false
 			return
 		}
-		fmt.Printf("service:%s node:%s port:%v\n", registryService.service.Name,
-			registryService.service.Nodes[0].IP, registryService.service.Nodes[0].Port)
+		/*
+			fmt.Printf("service:%s node:%s port:%v\n", registryService.service.Name,
+				registryService.service.Nodes[0].IP, registryService.service.Nodes[0].Port)
+			fmt.Printf("service:%s node:%s port:%v\n", registryService.service.Name,
+				registryService.service.Nodes[1].IP, registryService.service.Nodes[1].Port)
+		*/
 	}
 	return
 }
@@ -166,4 +231,15 @@ func (e *EtcdRegistry) registerService(registryService *RegisterService) (err er
 func (e *EtcdRegistry) serviceNodePath(service *registry.Service) string {
 	nodeIP := fmt.Sprintf("%s:%d", service.Nodes[0].IP, service.Nodes[0].Port)
 	return path.Join(e.options.RegistryPath, service.Name, nodeIP)
+}
+
+// 获取服务的前缀 如：/syncd/lyanna/agent_service
+func (e *EtcdRegistry) getServicePath(name string) string {
+	return path.Join(e.options.RegistryPath, name)
+}
+
+func (e *EtcdRegistry) getServiceFromCache(ctx context.Context, name string) (service *registry.Service, ok bool) {
+	allServiceInfo := e.value.Load().(*AllServiceInfo)
+	service, ok = allServiceInfo.serviceMap[name]
+	return
 }
