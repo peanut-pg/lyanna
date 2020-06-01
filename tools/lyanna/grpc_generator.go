@@ -15,8 +15,8 @@ type GrpcGenerator struct {
 }
 
 func (g *GrpcGenerator) Run(opt *Option) (err error) {
-
-	cmd := exec.Command("protoc", "--go_out", "plugins=grpc:.", opt.Proto3FileName)
+	outputParams := fmt.Sprintf("plugins=grpc:%s/generate/", opt.Output)
+	cmd := exec.Command("protoc", "--go_out", outputParams, opt.Proto3FileName)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	err = cmd.Run()
