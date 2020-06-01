@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -39,7 +40,13 @@ func main() {
 			Destination: &opt.GenServerCode,
 		},
 	}
-	app.Action = func(c *cli.Context) error {
+	app.Action = func(c *cli.Context) (err error) {
+		err = genMgr.Run(&opt)
+		if err != nil {
+			fmt.Printf("code generator failed, err:%v", err)
+			return
+		}
+		fmt.Println("code generate success")
 		return nil
 	}
 
