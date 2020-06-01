@@ -43,7 +43,7 @@ func main() {
 	app.Action = func(c *cli.Context) (err error) {
 		err = genMgr.Run(&opt)
 		if err != nil {
-			fmt.Printf("code generator failed, err:%v", err)
+			fmt.Printf("code generator failed, err:%v\n", err)
 			return
 		}
 		fmt.Println("code generate success")

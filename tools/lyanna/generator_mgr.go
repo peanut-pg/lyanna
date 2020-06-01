@@ -13,7 +13,7 @@ type GeneratorMgr struct {
 func Register(name string, gen Generator) (err error) {
 	_, ok := genMgr.genMap[name]
 	if ok {
-		err = fmt.Errorf("generator %s is exists", name)
+		err = fmt.Errorf("generator %s is exists\n", name)
 		return
 	}
 	genMgr.genMap[name] = gen
