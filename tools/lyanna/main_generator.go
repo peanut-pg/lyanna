@@ -15,7 +15,7 @@ func init() {
 type MainGenerator struct {
 }
 
-func (m *MainGenerator) Run(opt *Option) (err error) {
+func (m *MainGenerator) Run(opt *Option, metaData *ServiceMetaData) (err error) {
 	filename := path.Join("./", opt.Output, "main/main.go")
 	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
@@ -23,7 +23,7 @@ func (m *MainGenerator) Run(opt *Option) (err error) {
 		return
 	}
 	defer file.Close()
-	err = m.render(file, mainTemplate)
+	err = m.render(file, mainTemplate, metaData)
 	if err != nil {
 		fmt.Printf("render failed, err:%v\n", err)
 		return
@@ -31,13 +31,13 @@ func (m *MainGenerator) Run(opt *Option) (err error) {
 	return
 }
 
-func (m *MainGenerator) render(file *os.File, data string) (err error) {
+func (m *MainGenerator) render(file *os.File, data string, metaData *ServiceMetaData) (err error) {
 	t := template.New("main")
 	tml, err := t.Parse(data)
 	if err != nil {
 		fmt.Printf("render failed, err :%v\n", err)
 		return
 	}
-	err = tml.Execute(file, nil)
+	err = tml.Execute(file, metaData)
 	return
 }

@@ -21,7 +21,7 @@ func main() {
 		log.Fatal("failed to listen:%v",err)
 	}
 	s := grpc.NewServer()
-	hello.RegisterHelloServiceServer(s, server)
+	hello.Register{{.Service.Name}}Server(s, server)
 	s.Serve(lis)
 }
 `

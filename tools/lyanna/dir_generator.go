@@ -19,17 +19,19 @@ var AllDirList []string = []string{
 }
 
 func init() {
-	dir := &DirGenerator{
-		dirList: AllDirList,
-	}
-	Register("dir generator", dir)
+	/*
+		dir := &DirGenerator{
+			dirList: AllDirList,
+		}
+		Register("dir generator", dir)
+	*/
 }
 
 type DirGenerator struct {
 	dirList []string
 }
 
-func (d *DirGenerator) Run(opt *Option) (err error) {
+func (d *DirGenerator) Run(opt *Option, metaData *ServiceMetaData) (err error) {
 	for _, dir := range d.dirList {
 		fullDir := path.Join(opt.Output, dir)
 		err = os.MkdirAll(fullDir, 0755)

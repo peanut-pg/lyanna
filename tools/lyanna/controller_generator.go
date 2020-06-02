@@ -19,7 +19,7 @@ type CtrlGenerator struct {
 	rpcs     []*proto.RPC
 }
 
-func (c *CtrlGenerator) Run(opt *Option) (err error) {
+func (c *CtrlGenerator) Run(opt *Option, metaData *ServiceMetaData) (err error) {
 	render, err := os.Open(opt.Proto3FileName)
 	if err != nil {
 		fmt.Printf("open file:%s failed,err:%v\n", opt.Proto3FileName)
