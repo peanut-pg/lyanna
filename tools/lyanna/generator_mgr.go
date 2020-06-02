@@ -23,6 +23,7 @@ var AllDirList []string = []string{
 	"app/config",
 	"model",
 	"generate",
+	"router",
 }
 
 type GeneratorMgr struct {
@@ -52,6 +53,7 @@ func (g *GeneratorMgr) Run(opt *Option) (err error) {
 		return
 	}
 
+	g.metaData.Prefix = opt.Prefix
 	for _, gen := range g.genMap {
 		err = gen.Run(opt, g.metaData)
 		if err != nil {
