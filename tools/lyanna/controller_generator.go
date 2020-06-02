@@ -78,11 +78,11 @@ func (c *CtrlGenerator) generateGRPC(opt *Option) (err error) {
 	fmt.Fprintf(file, `hello "github.com/peanut-pg/lyanna/tools/lyanna/output/generate"`)
 	fmt.Fprintln(file)
 	fmt.Fprintf(file, ")\n")
-	fmt.Fprintf(file, "type server struct{}\n")
+	fmt.Fprintf(file, "type Server struct{}\n")
 	fmt.Fprint(file, "\n\n")
 
 	for _, rpc := range c.rpcs {
-		fmt.Fprintf(file, "func(s *server) %s(ctx context.Context, r*hello.%s)(resp*hello.%s, err error){\nreturn\n}\n\n",
+		fmt.Fprintf(file, "func(s *Server) %s(ctx context.Context, r*hello.%s)(resp*hello.%s, err error){\nreturn\n}\n\n",
 			rpc.Name, rpc.RequestType, rpc.ReturnsType)
 	}
 	return
