@@ -13,6 +13,18 @@ var genMgr *GeneratorMgr = &GeneratorMgr{
 	metaData: &ServiceMetaData{},
 }
 
+var AllDirList []string = []string{
+	"controller",
+	"idl",
+	"main",
+	"scripts",
+	"conf",
+	"app/router",
+	"app/config",
+	"model",
+	"generate",
+}
+
 type GeneratorMgr struct {
 	genMap   map[string]Generator
 	metaData *ServiceMetaData
