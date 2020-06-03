@@ -82,6 +82,7 @@ func (g *GeneratorMgr) parseService(opt *Option) (err error) {
 		proto.WithService(g.handleService),
 		proto.WithMessage(g.handleMessage),
 		proto.WithRPC(g.handleRPC),
+		proto.WithPackage(g.handlePackage),
 	)
 	return
 }
@@ -96,6 +97,10 @@ func (g *GeneratorMgr) handleMessage(m *proto.Message) {
 
 func (g *GeneratorMgr) handleRPC(r *proto.RPC) {
 	g.metaData.RPCs = append(g.metaData.RPCs, r)
+}
+
+func (g *GeneratorMgr) handlePackage(p *proto.Package) {
+	g.metaData.Package = p
 }
 
 func (g *GeneratorMgr) createAllDir(opt *Option) (err error) {
