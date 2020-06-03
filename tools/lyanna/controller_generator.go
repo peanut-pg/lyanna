@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"os"
 	"path"
 
@@ -13,77 +14,49 @@ func init() {
 	Register("controller generator", ctrl)
 }
 
+type RpcMeta struct {
+	RPC     *proto.RPC
+	Package *proto.Package
+	Prefix  string
+}
+
 type CtrlGenerator struct {
-	service  *proto.Service
-	messages []*proto.Message
-	rpcs     []*proto.RPC
 }
 
 func (c *CtrlGenerator) Run(opt *Option, metaData *ServiceMetaData) (err error) {
-	render, err := os.Open(opt.Proto3FileName)
+	return c.generateGRPC(opt, metaData)
+}
+
+func (c *CtrlGenerator) generateGRPC(opt *Option, metaData *ServiceMetaData) (err error) {
+	for _, rpc := range metaData.RPCs {
+		filename := path.Join("./", opt.Output, "controller", fmt.Sprintf("%s.go", rpc.Name))
+		var file *os.File
+		file, err = os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
+		if err != nil {
+			fmt.Printf("open file:%s failed, err:%v\n", filename, err)
+			return
+		}
+		defer file.Close()
+		rpcMeta := &RpcMeta{}
+		rpcMeta.Package = metaData.Package
+		rpcMeta.RPC = rpc
+		rpcMeta.Prefix = metaData.Prefix
+		err = c.render(file, controllerTemplate, rpcMeta)
+		if err != nil {
+			fmt.Printf("render controller failed err:%v\n", err)
+			return
+		}
+	}
+	return
+}
+
+func (c *CtrlGenerator) render(file *os.File, data string, metaData *RpcMeta) (err error) {
+	t := template.New("main")
+	tml, err := t.Parse(data)
 	if err != nil {
-		fmt.Printf("open file:%s failed,err:%v\n", opt.Proto3FileName)
+		fmt.Printf("render failed, err :%v\n", err)
 		return
 	}
-	defer render.Close()
-	parser := proto.NewParser(render)
-	definition, err := parser.Parse()
-	if err != nil {
-		fmt.Printf("parse file:%s failed, err:%v\n", opt.Proto3FileName, err)
-		return
-	}
-
-	proto.Walk(
-		definition,
-		proto.WithService(c.handleService),
-		proto.WithMessage(c.handleMessage),
-		proto.WithRPC(c.handleRPC),
-	)
-	//fmt.Printf("parse protoc success, rpc:%#v\n", c.rpc)
-	return c.generateGRPC(opt)
-}
-
-func (c *CtrlGenerator) handleService(s *proto.Service) {
-	//fmt.Printf(s.Name)
-	c.service = s
-}
-
-func (c *CtrlGenerator) handleMessage(m *proto.Message) {
-	//fmt.Println(m.Name)
-	c.messages = append(c.messages, m)
-}
-
-func (c *CtrlGenerator) handleRPC(r *proto.RPC) {
-	/*
-		fmt.Println(r.Name)
-		fmt.Println(r.RequestType)
-		fmt.Println(r.ReturnsType)
-		fmt.Printf("rpc:%#v, comment:%#v\n", r, r.Comment)
-	*/
-	c.rpcs = append(c.rpcs, r)
-}
-
-func (c *CtrlGenerator) generateGRPC(opt *Option) (err error) {
-	filename := path.Join(opt.Output, "controller", fmt.Sprintf("%s.go", c.service.Name))
-	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
-	if err != nil {
-		fmt.Printf("open file:%s failed, err:%v\n", filename, err)
-		return
-	}
-	defer file.Close()
-	fmt.Fprintf(file, "package controller\n")
-	fmt.Fprintf(file, "import(\n")
-	fmt.Fprintf(file, `"context"`)
-	fmt.Fprintln(file)
-	fmt.Fprintf(file, `hello "github.com/peanut-pg/lyanna/tools/lyanna/output/generate"`)
-	fmt.Fprintln(file)
-	fmt.Fprintf(file, ")\n")
-	fmt.Fprintf(file, "type Server struct{}\n")
-	fmt.Fprint(file, "\n\n")
-
-	for _, rpc := range c.rpcs {
-		fmt.Fprintf(file, "func(s *Server) %s(ctx context.Context, r*hello.%s)(resp*hello.%s, err error){\nreturn\n}\n\n",
-			rpc.Name, rpc.RequestType, rpc.ReturnsType)
-	}
+	err = tml.Execute(file, metaData)
 	return
 }
