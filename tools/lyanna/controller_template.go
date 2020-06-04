@@ -6,9 +6,9 @@ package controller
 import (
 	"context"
 	{{if not .Prefix}}
-		"{{.Package.Name}}"
+	"{{.Package.Name}}"
 	{{else}}
-		"{{.Prefix}}/{{.Package.Name}}"
+	"{{.Prefix}}/{{.Package.Name}}"
 	{{end}}
 )
 type {{.RPC.Name}}Controller struct{}

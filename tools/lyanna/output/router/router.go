@@ -3,19 +3,22 @@ package router
 import (
 	"context"
 	
-		"hello"
+	"hello"
+	
+	
+	"controller"
 	
 )
 type RouterServer struct{}
 
 
 func (s *RouterServer) SayHello(ctx context.Context, r*hello.HelloRequest))(resp*hello.HelloResponse){
-	inst := &SayHelloController{}
-	err = inst.CheckParams(ctx, r)
+	ctrl := &SayHelloController{}
+	err = ctrl.CheckParams(ctx, r)
 	if err != nil {
 		return
 	}
-	resp, err = inst.Run(ctx, r)
+	resp, err = ctrl.Run(ctx, r)
 	return
 }
 

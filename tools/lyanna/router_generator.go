@@ -16,7 +16,7 @@ type RouterGenerator struct {
 }
 
 func (r *RouterGenerator) Run(opt *Option, metaData *ServiceMetaData) (err error) {
-	filename := path.Join("./", opt.Output, "router/main.go")
+	filename := path.Join("./", opt.Output, "router/router.go")
 	file, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0755)
 	if err != nil {
 		fmt.Printf("open file:%s failed, err:%v\n", filename, err)
