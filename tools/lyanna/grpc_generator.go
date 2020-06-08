@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 )
 
 func init() {
@@ -15,7 +16,10 @@ type GrpcGenerator struct {
 }
 
 func (g *GrpcGenerator) Run(opt *Option, metaData *ServiceMetaData) (err error) {
-	outputParams := fmt.Sprintf("plugins=grpc:%s/generate/", opt.Output)
+	dir := path.Join(opt.Output, "generate", metaData.Package.Name)
+	os.MkdirAll(dir, 0755)
+	outputParams := fmt.Sprintf("plugins=grpc:%s/generate/%s", opt.Output, metaData.Package.Name)
+
 	cmd := exec.Command("protoc", "--go_out", outputParams, opt.Proto3FileName)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout

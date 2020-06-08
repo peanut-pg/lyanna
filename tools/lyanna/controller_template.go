@@ -6,9 +6,9 @@ package controller
 import (
 	"context"
 	{{if not .Prefix}}
-	"{{.Package.Name}}"
+	"generate/{{.Package.Name}}"
 	{{else}}
-	"{{.Prefix}}/{{.Package.Name}}"
+	""{{.Prefix}}/generate/{{.Package.Name}}"
 	{{end}}
 )
 type {{.RPC.Name}}Controller struct{}

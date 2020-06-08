@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
+	"runtime"
+	"strings"
 
 	"github.com/emicklei/proto"
 )
@@ -41,8 +44,39 @@ func Register(name string, gen Generator) (err error) {
 	return
 }
 
-func (g *GeneratorMgr) Run(opt *Option) (err error) {
+func (g *GeneratorMgr) initOutputDir(opt *Option) (err error) {
+	goPath := os.Getenv("GOPATH")
+	if len(opt.Prefix) > 0 {
+		opt.Output = path.Join(goPath, "src", opt.Prefix)
+		return
+	}
+	exeFilePath, err := filepath.Abs(os.Args[0])
+	if err != nil {
+		return
+	}
+	if runtime.GOOS == "windows" {
+		exeFilePath = strings.Replace(exeFilePath, "\\", "/", -1)
+	}
+	lastIds := strings.LastIndex(exeFilePath, "/")
+	if lastIds < 0 {
+		err = fmt.Errorf("invalid exe path:%v\n", exeFilePath)
+		return
+	}
+	opt.Output = strings.ToLower(exeFilePath[0:lastIds])
+	srcPath := path.Join(goPath, "src/")
+	if srcPath[len(srcPath)-1] != '/' {
+		srcPath = fmt.Sprintf("%s/", srcPath)
+	}
+	opt.Prefix = strings.Replace(opt.Output, srcPath, "", -1)
+	fmt.Printf("opt output:%s, prefix:%s\n", opt.Output, opt.Prefix)
+	return
+}
 
+func (g *GeneratorMgr) Run(opt *Option) (err error) {
+	err = g.initOutputDir(opt)
+	if err != nil {
+		return
+	}
 	err = g.parseService(opt)
 	if err != nil {
 		return
@@ -55,6 +89,7 @@ func (g *GeneratorMgr) Run(opt *Option) (err error) {
 
 	g.metaData.Prefix = opt.Prefix
 	for _, gen := range g.genMap {
+		fmt.Printf("gen is:%#v\n", gen)
 		err = gen.Run(opt, g.metaData)
 		if err != nil {
 			return

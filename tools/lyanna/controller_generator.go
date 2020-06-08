@@ -29,7 +29,10 @@ func (c *CtrlGenerator) Run(opt *Option, metaData *ServiceMetaData) (err error) 
 
 func (c *CtrlGenerator) generateGRPC(opt *Option, metaData *ServiceMetaData) (err error) {
 	for _, rpc := range metaData.RPCs {
-		filename := path.Join("./", opt.Output, "controller", fmt.Sprintf("%s.go", rpc.Name))
+
+		filename := path.Join(opt.Output, "controller", fmt.Sprintf("%s.go", rpc.Name))
+		fmt.Printf("------output is %v\n", opt.Output)
+		fmt.Println(filename)
 		var file *os.File
 		file, err = os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
 		if err != nil {

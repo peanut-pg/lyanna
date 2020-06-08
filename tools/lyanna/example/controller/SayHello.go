@@ -4,7 +4,7 @@ package controller
 import (
 	"context"
 	
-	"hello"
+	""/users/zhaofan/code/go_project/lyanna/tools/lyanna/example/generate/hello"
 	
 )
 type SayHelloController struct{}
