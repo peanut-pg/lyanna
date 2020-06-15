@@ -1,6 +1,4 @@
-package main
 
-var mainTemplate = `
 package main
 
 import (
@@ -8,17 +6,13 @@ import (
 	"log"
 	"google.golang.org/grpc"
 	
-	{{if not .Prefix}}
-	"router"
-	{{else}}
-	"{{.Prefix}}/router"
-	{{end}}
+	
+	"/users/zhaofan/code/go_project/lyanna/tools/lyanna/router"
+	
 
-	{{if not .Prefix}}
-	"generate/{{.Package.Name}}"
-	{{else}}
-	"{{.Prefix}}/generate/{{.Package.Name}}"
-	{{end}}
+	
+	"/users/zhaofan/code/go_project/lyanna/tools/lyanna/generate/hello"
+	
 )
 
 var server = &router.RouterServer{}
@@ -31,7 +25,6 @@ func main() {
 		log.Fatal("failed to listen:%v",err)
 	}
 	s := grpc.NewServer()
-	hello.Register{{.Service.Name}}Server(s, server)
+	hello.RegisterHelloServiceServer(s, server)
 	s.Serve(lis)
 }
-`

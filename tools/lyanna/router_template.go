@@ -18,8 +18,8 @@ import (
 type RouterServer struct{}
 
 {{range .RPCs}}
-func (r *RouterServer) {{.Name}}(ctx context.Context, r*{{$.Package.Name}}.{{.RequestType}}))(resp*{{$.Package.Name}}.{{.ReturnsType}}){
-	ctrl := &{{.Name}}Controller{}
+func (r *RouterServer) {{.Name}}(ctx context.Context, r*{{$.Package.Name}}.{{.RequestType}}))(resp*{{$.Package.Name}}.{{.ReturnsType}},err error){
+	ctrl := &controller.{{.Name}}Controller{}
 	err = ctrl.CheckParams(ctx, r)
 	if err != nil {
 		return
